@@ -26,12 +26,23 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const logger = require('./utils/logger');
 
-connectDB();
 const app = express();
 
 // ===== CORS CONFIGURATION =====
 // Restrictive in production, permissive in development
-const normalizeOrigin = (origin = '') => origin.trim().replace(/\/+$/, '');
+const normalizeOrigin = (origin = '') => {
+  const trimmedOrigin = origin.trim().replace(/\/+$/, '');
+
+  if (!trimmedOrigin) {
+    return '';
+  }
+
+  try {
+    return new URL(trimmedOrigin).origin;
+  } catch {
+    return trimmedOrigin;
+  }
+};
 
 const configuredOrigins = Array.from(new Set([
   ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : []),
@@ -214,7 +225,19 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0", () => {
-  logger.info(`✅ Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-  console.log(`✅ Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-});
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, "0.0.0.0", () => {
+      logger.info(`✅ Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+      console.log(`✅ Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+    });
+  } catch (err) {
+    logger.error('❌ Failed to start server:', err);
+    console.error('❌ Failed to start server:', err);
+    process.exit(1);
+  }
+};
+
+startServer();
