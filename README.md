@@ -93,7 +93,7 @@ The backend should start on `http://localhost:5000` (or the port in your `.env`)
 
 1. `cd frontend`
 2. `npm install`
-3. Create frontend `.env` if required (e.g. `REACT_APP_API_URL=http://localhost:5000/api`)
+3. Create frontend `.env` if required (e.g. `VITE_API_BASE_URL=http://localhost:5000`)
 4. `npm start`
 
 Open `http://localhost:3000` to view the app.
@@ -179,8 +179,8 @@ Example seed command in `package.json`:
 * For cash payments (rent, offline payments) add an offline payment record in `payments` with `method: 'cash'` so metrics include them.
 * Use consistent date formats (ISO `YYYY-MM-DD` / ISO timestamps) across frontend and backend.
 
+Osman Bin Nasir
 Abdul Razzaq
 
 ---
 
-*README generated for your FitZone project. If you want a shorter README for GitHub, or a version with badges (build/test/coverage), I can create that next.*

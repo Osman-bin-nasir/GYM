@@ -31,18 +31,38 @@ const app = express();
 
 // ===== CORS CONFIGURATION =====
 // Restrictive in production, permissive in development
+const normalizeOrigin = (origin = '') => origin.trim().replace(/\/+$/, '');
+
+const configuredOrigins = Array.from(new Set([
+  ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : []),
+  process.env.FRONTEND_URL
+].map(origin => normalizeOrigin(origin || '')).filter(Boolean)));
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
-    : true, // Reflect request origin in development (required for credentials: true)
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin(origin, callback) {
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (configuredOrigins.includes(normalizeOrigin(origin))) {
+      return callback(null, true);
+    }
+
+    logger.warn(`Blocked CORS request from origin: ${origin}`);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true
 };
 
 app.use(cors(corsOptions));
 
-if (process.env.NODE_ENV === 'production' && (!process.env.ALLOWED_ORIGINS || process.env.ALLOWED_ORIGINS.length === 0)) {
-  logger.warn('⚠️  WARNING: ALLOWED_ORIGINS not set in production. CORS will block all requests.');
+if (process.env.NODE_ENV === 'production' && configuredOrigins.length === 0) {
+  logger.warn('⚠️  WARNING: No allowed frontend origins configured in production. Set ALLOWED_ORIGINS or FRONTEND_URL.');
 }
 
 // ===== SECURITY MIDDLEWARE =====

@@ -1,5 +1,14 @@
 import axios from "axios";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const normalizeApiBaseUrl = (value) => {
+  if (!value) return value;
+
+  // Requests in the app already start with /api, so strip any trailing /api
+  // from the configured host to avoid /api/api/... in production.
+  return value.trim().replace(/\/+$/, "").replace(/\/api$/, "");
+};
+
+const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
 
 const instance = axios.create({
   // baseURL: 'http://localhost:3000',
